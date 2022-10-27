@@ -1,0 +1,14 @@
+{
+  "name": "parseit",
+  "version": "0.0.1",
+  "description": "Customizable parsing library for converting a list of tokens into an AST tree",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Luctisity",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  }
+}
