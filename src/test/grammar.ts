@@ -14,7 +14,7 @@ function memberAcOrPass (data: any[]) {
         : new MemberAccessNode(data[0], data[1]);
 }
 
-grammar.rule("block").blockLoop(["$statement", either("@BLOCKSEP&", "@NEWL&")]).as(BlockNode);
+grammar.rule("block").blockLoop(["$statement", either("@BLOCKSEP&", "@NEWL&")]).overrideIgnore().as(BlockNode);
 
 grammar.rule("statement").from("$expr").pass();
 
@@ -79,6 +79,7 @@ grammar.rule("atom").from("@KEYWORD:null") .as(AtomNode);
 grammar.rule("atom").from("@IDENTIFIER")   .as(AtomNode);
 grammar.rule("atom").from("@OPAREN", "$expr", "@CPAREN").select(1);
 
+grammar.ignore("@NEWL");
 grammar.startFrom("block");
 
 export default grammar;

@@ -1,7 +1,7 @@
 import Token from "../classes/Token";
 import Grammar from "../grammar/grammar";
-import { GrammarAtom, GrammarBinaryLoop, GrammarBlockLoop, GrammarEither, GrammarRuleContent, GrammarRuleContentItem } from "../grammar/rule";
-import { adaptNodeData, isRule, isToken, tokenMatches } from "./util";
+import GrammarRule, { GrammarAtom, GrammarBinaryLoop, GrammarBlockLoop, GrammarEither, GrammarRuleContent, GrammarRuleContentItem } from "../grammar/rule";
+import { adaptNodeData, isRule, isToken, tokenMatches, tokenShouldBeIgnored } from "./util";
 
 export type RuleVariationContentStack = {
     content: GrammarRuleContent,
@@ -45,6 +45,7 @@ export default class Parser {
             let matched   = true;
             let nodeData: any[] = [];
             this.index = +startIndex; // reset index to start from the (relative) beginning
+            this.advance(ruleVariation);
 
             // a stack for rule variation content (to make loops possible)
             // each loop creates it's own stack layer and removes it when the iteration is complete
@@ -171,6 +172,11 @@ export default class Parser {
             this.index++;
 
         }
+    }
+
+    private advance (rule?: GrammarRule) {
+        while (tokenShouldBeIgnored(this.tokens[this.index], this.grammar, rule))
+            this.index++;
     }
 
 }

@@ -1,4 +1,5 @@
 import { ASTNodeConstructor } from "../classes/ASTNode";
+import Token from "../classes/Token";
 import GrammarRule, { GrammarAtom, GrammarAtomType, GrammarBinaryLoop, GrammarBlockLoop, GrammarEither, GrammarRuleSpecialMatch } from "./rule";
 
 export type GrammarRulesMap = {
@@ -11,6 +12,7 @@ export default class Grammar {
 
     private rules: GrammarRulesMap = {};
     private currentData: any       = {};
+    private ignored: GrammarAtom[] = [];
 
     startRule: string = "";
 
@@ -25,6 +27,18 @@ export default class Grammar {
 
     startFrom (rule: string) {
         this.startRule = rule;
+    }
+
+    ignore (...args: GrammarRuleShorthand[]) {
+        args.forEach(a => {
+            let p = convertStringToAtom(a) as GrammarAtom;
+            if (p)  this.ignored.push(p);
+        });
+    }
+
+    getIgnored (token: Token, rule?: GrammarRule) {
+        const ignored = (rule && rule.ignored) ? rule.ignored : this.ignored;
+        return ignored.filter(f => f.name == token.type && (f.value === undefined || f.value == token.value))[0];
     }
 
     getRule (name: string) {
@@ -68,6 +82,18 @@ export default class Grammar {
 
     }
 
+    private overrideIgnore = (...args: GrammarRuleShorthand[]) => {
+
+        this.currentData.ignored = [];
+        args.forEach(a => {
+            let p = convertStringToAtom(a) as GrammarAtom;
+            if (p)  this.currentData.ignored.push(p);
+        });
+
+        return this.chain();
+
+    }
+
     // for converting data automatically to a specific AST node
     private as = (match: ASTNodeConstructor) => {
         this.currentData.match = match;
@@ -99,18 +125,20 @@ export default class Grammar {
             this.rules[this.currentData.name] = [];
 
         this.rules[this.currentData.name].push(
-            new GrammarRule(this.currentData.name, this.currentData.content, this.currentData.match, this.currentData.func)
+            new GrammarRule(this.currentData.name, this.currentData.content, this.currentData.match, this.currentData.func, this.currentData.ignored)
         );
     }
 
     private chain = () => { return {
-        from:       this.from,
-        binaryLoop: this.binaryLoop,
-        blockLoop:  this.blockLoop,
-        as:         this.as,
-        pass:       this.pass, 
-        decide:     this.decide,
-        select:     this.select
+        from:           this.from,
+        binaryLoop:     this.binaryLoop,
+        blockLoop:      this.blockLoop,
+        overrideIgnore: this.overrideIgnore,
+
+        as:     this.as,
+        pass:   this.pass, 
+        decide: this.decide,
+        select: this.select
     }}
 
 }

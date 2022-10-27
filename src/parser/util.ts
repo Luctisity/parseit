@@ -1,4 +1,5 @@
 import Token from "../classes/Token";
+import Grammar from "../grammar/grammar";
 import GrammarRule, { GrammarAtom, GrammarAtomType, GrammarRuleContentItem, GrammarRuleSpecialMatch } from "../grammar/rule";
 
 export function isRule (item: GrammarRuleContentItem) {
@@ -11,7 +12,7 @@ export function isToken (item: GrammarRuleContentItem) {
 
 export function tokenMatches (token: Token, item: GrammarAtom) {
     if (!token) return false;
-    
+
     const matchValue = item.value !== undefined ? token.value == item.value : true;
     return token 
         && item.type  == GrammarAtomType.TOKEN 
@@ -28,4 +29,10 @@ export function adaptNodeData (data: any[], rule: GrammarRule) {
         const targetNode: any = rule.match;
         return new targetNode(...data);
     }
+}
+
+export function tokenShouldBeIgnored (token: Token, grammar: Grammar, rule?: GrammarRule) {
+    if (!token) return;
+    const atom = grammar.getIgnored(token, rule);
+    return atom && tokenMatches(token, atom);
 }

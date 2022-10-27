@@ -13,16 +13,18 @@ export enum GrammarRuleSpecialMatch { PASS, FUNC }
 
 export default class GrammarRule {
 
-    name:    string;
-    content: GrammarRuleContent = [];
-    match:   ASTNodeConstructor | GrammarRuleSpecialMatch;
-    func?:   Function;
+    name:     string;
+    content:  GrammarRuleContent = [];
+    match:    ASTNodeConstructor | GrammarRuleSpecialMatch;
+    func?:    Function;
+    ignored?: GrammarAtom[];
 
-    constructor (name: string, content: GrammarRuleContent, match: ASTNodeConstructor | GrammarRuleSpecialMatch, func?: Function) {
+    constructor (name: string, content: GrammarRuleContent, match: ASTNodeConstructor | GrammarRuleSpecialMatch, func?: Function, ignored?: GrammarAtom[]) {
         this.name    = name;
         this.content = content;
         this.match   = match;
         this.func    = func;
+        this.ignored = ignored;
     }
 
 }
