@@ -107,3 +107,41 @@ export class VarAssignNode extends ASTNode {
     }
 
 }
+
+export class IfNode extends ASTNode {
+
+    type = 'if';
+
+    condIf:    ASTNode;
+    thenIf:    ASTNode;
+    thenElse?: ASTNode;
+
+    constructor (_keyword: Token, condIf: ASTNode, thenIf: ASTNode, thenElse?: ASTNode) {
+        super();
+        this.condIf   = condIf;
+        this.thenIf   = thenIf;
+        this.thenElse = thenElse;
+    }
+
+    toString () {
+        return `if ${this.condIf} then ${this.thenIf} ${this.thenElse || ""}`;
+    }
+
+}
+
+export class ElseNode extends ASTNode {
+
+    type = 'else';
+
+    block: ASTNode;
+
+    constructor (_keyword: Token, block: ASTNode) {
+        super();
+        this.block = block;
+    }
+
+    toString () {
+        return `else ${this.block}`;
+    }
+
+}

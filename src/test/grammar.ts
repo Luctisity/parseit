@@ -1,5 +1,5 @@
 import Grammar, { either } from "../grammar/grammar";
-import { AtomNode, UnaryOpNode, BinaryOpNode, VarAssignNode, MemberAccessNode, BlockNode } from "./nodes";
+import { AtomNode, UnaryOpNode, BinaryOpNode, VarAssignNode, MemberAccessNode, BlockNode, IfNode, ElseNode } from "./nodes";
 const grammar = new Grammar();
 
 function binaryOpOrPass (data: any[]) {
@@ -16,11 +16,25 @@ function memberAcOrPass (data: any[]) {
 
 const blockSeparator = either("@BLOCKSEP&", "@NEWL&");
 
+
 grammar.rule("block").blockLoop("$statement", blockSeparator).overrideIgnore().as(BlockNode);
-grammar.rule("block").blockLoop(blockSeparator, "$statement").overrideIgnore().as(BlockNode);
+//grammar.rule("block").blockLoop(blockSeparator, "$statement").overrideIgnore().as(BlockNode);
 grammar.rule("block").from("$statement").overrideIgnore().as(BlockNode);
 
-grammar.rule("statement").from("$expr").pass();
+grammar.rule("statement").from("$if")  .preventRollback().pass();
+grammar.rule("statement").from("$expr").preventRollback().pass();
+grammar.rule("statement").from()       .preventRollback().pass();
+
+
+grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "@OCURLY&", "$block", "@CCURLY&", "$else").as(IfNode);
+grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "@OCURLY&", "$block", "@CCURLY&")         .as(IfNode);
+grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "$statement", "@BLOCKSEP&", "$else")      .as(IfNode);
+grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "$statement", "$else")                    .as(IfNode);
+grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "$statement")                             .as(IfNode);
+
+grammar.rule("else").from("@KEYWORD:else", "@OCURLY&", "$block", "@CCURLY&").as(ElseNode);
+grammar.rule("else").from("@KEYWORD:else", "$statement")                     .as(ElseNode);
+
 
 grammar.rule("expr").from("$logic")    .pass();
 grammar.rule("expr").from("$varAssign").pass();

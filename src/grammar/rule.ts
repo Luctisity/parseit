@@ -18,13 +18,22 @@ export default class GrammarRule {
     match:    ASTNodeConstructor | GrammarRuleSpecialMatch;
     func?:    Function;
     ignored?: GrammarAtom[];
+    
+    preventRollback = false;
 
-    constructor (name: string, content: GrammarRuleContent, match: ASTNodeConstructor | GrammarRuleSpecialMatch, func?: Function, ignored?: GrammarAtom[]) {
+    constructor (
+        name: string, content: GrammarRuleContent, 
+        match: ASTNodeConstructor | GrammarRuleSpecialMatch, func?: Function, 
+        ignored?: GrammarAtom[], preventRollback = false
+    ) {
+
         this.name    = name;
         this.content = content;
         this.match   = match;
         this.func    = func;
         this.ignored = ignored;
+        this.preventRollback = preventRollback;
+
     }
 
 }

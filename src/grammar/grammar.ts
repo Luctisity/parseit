@@ -94,6 +94,11 @@ export default class Grammar {
 
     }
 
+    private preventRollback = () => {
+        this.currentData.preventRollback = true;
+        return this.chain();
+    }
+
     // for converting data automatically to a specific AST node
     private as = (match: ASTNodeConstructor) => {
         this.currentData.match = match;
@@ -124,16 +129,19 @@ export default class Grammar {
         if (!this.rules[this.currentData.name])
             this.rules[this.currentData.name] = [];
 
-        this.rules[this.currentData.name].push(
-            new GrammarRule(this.currentData.name, this.currentData.content, this.currentData.match, this.currentData.func, this.currentData.ignored)
-        );
+        this.rules[this.currentData.name].push(new GrammarRule(
+            this.currentData.name,    this.currentData.content, 
+            this.currentData.match,   this.currentData.func, 
+            this.currentData.ignored, this.currentData.preventRollback
+        ));
     }
 
     private chain = () => { return {
-        from:           this.from,
-        binaryLoop:     this.binaryLoop,
-        blockLoop:      this.blockLoop,
-        overrideIgnore: this.overrideIgnore,
+        from:            this.from,
+        binaryLoop:      this.binaryLoop,
+        blockLoop:       this.blockLoop,
+        overrideIgnore:  this.overrideIgnore,
+        preventRollback: this.preventRollback,
 
         as:     this.as,
         pass:   this.pass, 

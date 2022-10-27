@@ -28,7 +28,7 @@ export default class Parser {
         const startRule = this.grammar.startRule;
         const result    = this.evaluateRule(startRule);
 
-        if (this.index < this.tokens.length) return "Error"; // if didn't reach the end, throw error
+        if (this.index < this.tokens.length) return "Error (EOF not reached) " + this.tokens[this.index]; // if didn't reach the end, throw error
         return result;
     }
 
@@ -39,13 +39,13 @@ export default class Parser {
         let ruleVariationIndex = 0;
 
         // loop A: through all rule's variations
+        if (ruleVariations)
         while (ruleVariationIndex < ruleVariations.length) {
 
             const ruleVariation = ruleVariations[ruleVariationIndex];
             let matched   = true;
             let nodeData: any[] = [];
             this.index = +startIndex; // reset index to start from the (relative) beginning
-            this.advance(ruleVariation);
 
             // a stack for rule variation content (to make loops possible)
             // each loop creates it's own stack layer and removes it when the iteration is complete
@@ -77,7 +77,7 @@ export default class Parser {
                         () => {
                             matched    = false;
                             shouldBreak = true;
-                        });
+                        }, ruleVariation);
 
                     if (shouldBreak) break; // break out of loop B
 
@@ -94,6 +94,7 @@ export default class Parser {
 
                     continue;
 
+                // for block loops
                 } else if (item instanceof GrammarBlockLoop) {
 
                     // add a stack layer for the loop and set it to complete
@@ -105,6 +106,7 @@ export default class Parser {
 
                     continue;
 
+                // for "either" selectors
                 } else if (item instanceof GrammarEither) {
 
                     let found: any = false;
@@ -114,7 +116,7 @@ export default class Parser {
                         this.evaluateOnePiece(variant, (result: any) => {
                             found = result;
                             skip  = (variant as GrammarAtom).skip;
-                        });
+                        }, undefined, ruleVariation);
                     });
                     
                     if (found) {
@@ -139,6 +141,9 @@ export default class Parser {
 
             }
 
+            // un-skip recently skipped tokens
+            if (!ruleVariation.preventRollback) this.rollback();
+            
             // if matched the variation, construct the required node and return it
             if (matched || loopCompleted) {
                 const targetNode = adaptNodeData(nodeData, ruleVariation);
@@ -152,7 +157,7 @@ export default class Parser {
         return "Error"; // TODO: replace with exception class
     }
 
-    private evaluateOnePiece = (item: GrammarRuleContentItem, success: Function, fail?: Function) => {
+    private evaluateOnePiece = (item: GrammarRuleContentItem, success: Function, fail?: Function, rule?: GrammarRule) => {
         // for rules: evaluate the rule recursively 
         // if error — fail, else — return the result
         if (isRule(item)) {
@@ -160,11 +165,13 @@ export default class Parser {
             const itemResult = this.evaluateRule((item as GrammarAtom).name);
 
             if (itemResult == "Error") fail ? fail() : null;
-            else success(itemResult, (item as GrammarAtom).skip);
+            else if (itemResult)       success(itemResult, (item as GrammarAtom).skip);
 
         // for tokens: check if token matches the given item
         // if not — fail, else — return the token
         } else if (isToken(item)) {
+
+            this.advance(rule);
 
             if (!tokenMatches(this.tokens[this.index], item as GrammarAtom))
                 return fail ? fail() : null;
@@ -175,9 +182,19 @@ export default class Parser {
         }
     }
 
+    // skip all tokens based on ignore rules and overrides
     private advance (rule?: GrammarRule) {
-        while (tokenShouldBeIgnored(this.tokens[this.index], this.grammar, rule))
+        while (tokenShouldBeIgnored(this.tokens[this.index], this.grammar, rule)) 
             this.index++;
+    }
+
+    // unskip
+    private rollback () {
+        let prevToken = this.tokens[this.index-1];
+        while (tokenShouldBeIgnored(prevToken, this.grammar)) {
+            this.index--;
+            prevToken = this.tokens[this.index-1];
+        }
     }
 
 }
