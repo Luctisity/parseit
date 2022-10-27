@@ -28,7 +28,7 @@ export default class Parser {
         const startRule = this.grammar.startRule;
         const result    = this.evaluateRule(startRule);
 
-        if (this.index < this.tokens.length) return "Error (EOF not reached) " + this.tokens[this.index]; // if didn't reach the end, throw error
+        if (this.index < this.tokens.length) return "Unexpected token " + this.tokens[this.index]; // if didn't reach the end, throw error
         return result;
     }
 
