@@ -5,7 +5,7 @@ import grammar from "./grammar";
 const parser = new Parser(grammar);
 
 const result = parser.parse(toTokens(
-    "IDENTIFIER:hello EQUALS INT:5 NEWL INT:5 ADD INT:5 NEWL",
+    "IDENTIFIER:hello NEWL INT:5 ADD INT:5 BLOCKSEP",
     //"IDENTIFIER:mario OBRACK IDENTIFIER:is CBRACK DOT IDENTIFIER:gaming",
     "INT:2 ADD NEWL INT:2 SUB INT:2 MUL INT:3 NEWL INT:69 NEWL"
 ));

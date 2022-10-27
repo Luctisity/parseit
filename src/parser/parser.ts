@@ -128,7 +128,8 @@ export default class Parser {
 
                 // advance and set loop to incomplete
                 stack[0].index++;
-                loopCompleted = false;
+                if (stack[0].type != ContentStackType.BLOCK)
+                    loopCompleted = false;
 
                 // if reached end, remove stack layer
                 if (stack[0].index >= stack[0].content.length) {

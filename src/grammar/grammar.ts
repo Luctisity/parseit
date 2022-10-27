@@ -69,13 +69,13 @@ export default class Grammar {
 
     }
 
-    private blockLoop = (args: GrammarRuleShorthand[]) => {
+    private blockLoop = (statement: GrammarRuleShorthand, separator: GrammarRuleShorthand) => {
 
         const loop = new GrammarBlockLoop();
-        args.forEach(a => {
-            let p = convertStringToAtom(a);
-            if (p)  loop.content.push(p);
-        });
+        loop.content = [
+            convertStringToAtom(statement) as GrammarAtom, 
+            convertStringToAtom(separator) as GrammarAtom
+        ];
         this.currentData.content.push(loop);
 
         return this.chain();

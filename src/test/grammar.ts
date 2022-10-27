@@ -14,7 +14,11 @@ function memberAcOrPass (data: any[]) {
         : new MemberAccessNode(data[0], data[1]);
 }
 
-grammar.rule("block").blockLoop(["$statement", either("@BLOCKSEP&", "@NEWL&")]).overrideIgnore().as(BlockNode);
+const blockSeparator = either("@BLOCKSEP&", "@NEWL&");
+
+grammar.rule("block").blockLoop("$statement", blockSeparator).overrideIgnore().as(BlockNode);
+grammar.rule("block").blockLoop(blockSeparator, "$statement").overrideIgnore().as(BlockNode);
+grammar.rule("block").from("$statement").overrideIgnore().as(BlockNode);
 
 grammar.rule("statement").from("$expr").pass();
 
