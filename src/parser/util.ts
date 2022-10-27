@@ -10,6 +10,8 @@ export function isToken (item: GrammarRuleContentItem) {
 }
 
 export function tokenMatches (token: Token, item: GrammarAtom) {
+    if (!token) return false;
+    
     const matchValue = item.value !== undefined ? token.value == item.value : true;
     return token 
         && item.type  == GrammarAtomType.TOKEN 

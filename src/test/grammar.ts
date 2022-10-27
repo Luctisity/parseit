@@ -1,5 +1,5 @@
 import Grammar, { either } from "../grammar/grammar";
-import { AtomNode, UnaryOpNode, BinaryOpNode, VarAssignNode, MemberAccessNode } from "./nodes";
+import { AtomNode, UnaryOpNode, BinaryOpNode, VarAssignNode, MemberAccessNode, BlockNode } from "./nodes";
 const grammar = new Grammar();
 
 function binaryOpOrPass (data: any[]) {
@@ -13,6 +13,10 @@ function memberAcOrPass (data: any[]) {
         ? data[0] 
         : new MemberAccessNode(data[0], data[1]);
 }
+
+grammar.rule("block").blockLoop(["$statement", either("@BLOCKSEP&", "@NEWL&")]).as(BlockNode);
+
+grammar.rule("statement").from("$expr").pass();
 
 grammar.rule("expr").from("$logic")    .pass();
 grammar.rule("expr").from("$varAssign").pass();
@@ -60,11 +64,11 @@ grammar.rule("memberAssign").from("$member", "@INCR")            .as(VarAssignNo
 grammar.rule("memberAssign").from("$member", "@DECR")            .as(VarAssignNode);
 grammar.rule("memberAssign").from("$member").pass();
 
-grammar.rule("member").from("$atom").binaryLoop([either("$memberDot", "$memberDynamic", "$memberFunction")]).decide(memberAcOrPass);
+grammar.rule("member").from("$atom").binaryLoop([either("$memberDynamic", "$memberDot", "$memberFunction")]).decide(memberAcOrPass);
 grammar.rule("member").from("$atom").pass();
 
-grammar.rule("memberDynamic") .from("@OBRACK", "$expr").select(1);
 grammar.rule("memberDot")     .from("@DOT", "@IDENTIFIER")        .select(1);
+grammar.rule("memberDynamic") .from("@OBRACK", "$expr", "@CBRACK").select(1);
 grammar.rule("memberFunction").from("@OPAREN", "@CPAREN")         .select(2);
 
 grammar.rule("atom").from("@INT")          .as(AtomNode);
@@ -75,6 +79,6 @@ grammar.rule("atom").from("@KEYWORD:null") .as(AtomNode);
 grammar.rule("atom").from("@IDENTIFIER")   .as(AtomNode);
 grammar.rule("atom").from("@OPAREN", "$expr", "@CPAREN").select(1);
 
-grammar.startFrom("expr");
+grammar.startFrom("block");
 
 export default grammar;

@@ -1,5 +1,5 @@
 import { ASTNodeConstructor } from "../classes/ASTNode";
-import GrammarRule, { GrammarAtom, GrammarAtomType, GrammarBinaryLoop, GrammarEither, GrammarRuleSpecialMatch } from "./rule";
+import GrammarRule, { GrammarAtom, GrammarAtomType, GrammarBinaryLoop, GrammarBlockLoop, GrammarEither, GrammarRuleSpecialMatch } from "./rule";
 
 export type GrammarRulesMap = {
     [key: string]: GrammarRule[];
@@ -55,6 +55,19 @@ export default class Grammar {
 
     }
 
+    private blockLoop = (args: GrammarRuleShorthand[]) => {
+
+        const loop = new GrammarBlockLoop();
+        args.forEach(a => {
+            let p = convertStringToAtom(a);
+            if (p)  loop.content.push(p);
+        });
+        this.currentData.content.push(loop);
+
+        return this.chain();
+
+    }
+
     // for converting data automatically to a specific AST node
     private as = (match: ASTNodeConstructor) => {
         this.currentData.match = match;
@@ -93,6 +106,7 @@ export default class Grammar {
     private chain = () => { return {
         from:       this.from,
         binaryLoop: this.binaryLoop,
+        blockLoop:  this.blockLoop,
         as:         this.as,
         pass:       this.pass, 
         decide:     this.decide,
@@ -110,18 +124,23 @@ export function either (...args: string[]) {
     return component;
 }
 
-// TODO: add option for skippable tokens
 function convertStringToAtom (str: GrammarRuleShorthand) {
     let p: GrammarAtom | undefined;
+    let skip = false;
 
     if (typeof str != 'string') 
         return str;
+
+    if (str.endsWith("&")) {
+        str = str.slice(0, -1);
+        skip = true;
+    }
 
     if (str.startsWith("@")) {
         // slice off "@" at the beginning
         // and split into name and value by the ":" separator
         let strSpl = str.slice(1).split(':');
-        p = new GrammarAtom(strSpl[0], GrammarAtomType.TOKEN, strSpl[1]);
+        p = new GrammarAtom(strSpl[0], GrammarAtomType.TOKEN, strSpl[1], skip);
     }
 
     if (str.startsWith("$")) 

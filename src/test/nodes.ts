@@ -53,6 +53,23 @@ export class BinaryOpNode extends ASTNode {
 
 }
 
+export class BlockNode extends ASTNode {
+
+    type = 'block';
+
+    nodes: ASTNode[];
+
+    constructor (...nodes: ASTNode[]) {
+        super();
+        this.nodes = nodes;
+    }
+
+    toString () {
+        return `{\n\n${this.nodes.join('; \n')}\n\n}`;
+    }
+
+}
+
 export class MemberAccessNode extends ASTNode {
 
     type = 'memberAccess';

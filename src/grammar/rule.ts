@@ -33,11 +33,13 @@ export class GrammarAtom {
     name:  string;
     value: any;
     type:  GrammarAtomType;
+    skip:  boolean = false;
 
-    constructor (name: string, type: GrammarAtomType, value?: any) {
+    constructor (name: string, type: GrammarAtomType, value?: any, skip: boolean = false) {
         this.name  = name;
         this.value = value;
         this.type  = type;
+        this.skip  = skip;
     }
 
 }

@@ -1,6 +1,6 @@
 import Token from "../classes/Token";
 import Grammar from "../grammar/grammar";
-import { GrammarAtom, GrammarBinaryLoop, GrammarEither, GrammarRuleContent, GrammarRuleContentItem } from "../grammar/rule";
+import { GrammarAtom, GrammarBinaryLoop, GrammarBlockLoop, GrammarEither, GrammarRuleContent, GrammarRuleContentItem } from "../grammar/rule";
 import { adaptNodeData, isRule, isToken, tokenMatches } from "./util";
 
 export type RuleVariationContentStack = {
@@ -9,7 +9,7 @@ export type RuleVariationContentStack = {
     index:   number
 }[];
 
-export enum ContentStackType { RULE, LOOP, EITHER }
+export enum ContentStackType { RULE, BINARY, BLOCK }
 
 export default class Parser {
 
@@ -68,7 +68,9 @@ export default class Parser {
 
                     this.evaluateOnePiece(item, 
                         // success
-                        (result: any) => nodeData.push(result),
+                        (result: any, skip: boolean) => {
+                            if (!skip) nodeData.push(result)
+                        },
 
                         // fail
                         () => {
@@ -84,23 +86,38 @@ export default class Parser {
                     // add a stack layer for the loop and set it to complete
                     stack.unshift({
                         content: item.content,
-                        type:    ContentStackType.LOOP,
+                        type:    ContentStackType.BINARY,
                         index:   0
                     });
                     nodeData = [adaptNodeData(nodeData, ruleVariation)];
 
                     continue;
 
+                } else if (item instanceof GrammarBlockLoop) {
+
+                    // add a stack layer for the loop and set it to complete
+                    stack.unshift({
+                        content: item.content,
+                        type:    ContentStackType.BLOCK,
+                        index:   0
+                    });
+
+                    continue;
+
                 } else if (item instanceof GrammarEither) {
 
                     let found: any = false;
+                    let skip = false;
                     
                     item.variants.forEach(variant => {
-                        this.evaluateOnePiece(variant, (result: any) => found = result);
+                        this.evaluateOnePiece(variant, (result: any) => {
+                            found = result;
+                            skip  = (variant as GrammarAtom).skip;
+                        });
                     });
                     
                     if (found) {
-                        nodeData.push(found);
+                        if (!skip) nodeData.push(found);
                     } else {
                         matched = false;
                         break;
@@ -141,7 +158,7 @@ export default class Parser {
             const itemResult = this.evaluateRule((item as GrammarAtom).name);
 
             if (itemResult == "Error") fail ? fail() : null;
-            else success(itemResult);
+            else success(itemResult, (item as GrammarAtom).skip);
 
         // for tokens: check if token matches the given item
         // if not — fail, else — return the token
@@ -150,7 +167,7 @@ export default class Parser {
             if (!tokenMatches(this.tokens[this.index], item as GrammarAtom))
                 return fail ? fail() : null;
             
-            success(this.tokens[this.index]);
+            success(this.tokens[this.index], (item as GrammarAtom).skip);
             this.index++;
 
         }
