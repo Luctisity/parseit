@@ -1,13 +1,15 @@
+import ParseError, { error } from "../classes/ParseError";
 import Token from "../classes/Token";
 import Grammar from "../grammar/grammar";
 import GrammarRule, { GrammarAtom, GrammarBinaryLoop, GrammarBlockLoop, GrammarEither, GrammarRuleContent, GrammarRuleContentItem } from "../grammar/rule";
 import { adaptNodeData, isRule, isToken, tokenMatches, tokenShouldBeIgnored } from "./util";
 
-export type RuleVariationContentStack = {
+export type RuleVariationContentStackItem = {
     content: GrammarRuleContent,
     type:    ContentStackType,
     index:   number
-}[];
+};
+export type RuleVariationContentStack = RuleVariationContentStackItem[];
 
 export enum ContentStackType { RULE, BINARY, BLOCK }
 
@@ -28,7 +30,7 @@ export default class Parser {
         const startRule = this.grammar.startRule;
         const result    = this.evaluateRule(startRule);
 
-        if (this.index < this.tokens.length) return "Unexpected token " + this.tokens[this.index]; // if didn't reach the end, throw error
+        if (this.index < this.tokens.length) return error(this.index, this.currentTok); // if didn't reach the end, throw error
         return result;
     }
 
@@ -43,17 +45,13 @@ export default class Parser {
         while (ruleVariationIndex < ruleVariations.length) {
 
             const ruleVariation = ruleVariations[ruleVariationIndex];
-            let matched   = true;
+            let matched = true;
             let nodeData: any[] = [];
             this.index = +startIndex; // reset index to start from the (relative) beginning
 
             // a stack for rule variation content (to make loops possible)
             // each loop creates it's own stack layer and removes it when the iteration is complete
-            let stack: RuleVariationContentStack = [{
-                content: ruleVariation.content,
-                type:    ContentStackType.RULE,
-                index:   0
-            }];
+            let stack: RuleVariationContentStack = [this.stackLayer(ruleVariation.content, ContentStackType.RULE)];
             let loopCompleted = false;
 
             // loop B: through rule variation's items
@@ -67,17 +65,10 @@ export default class Parser {
 
                     let shouldBreak = false;
 
-                    this.evaluateOnePiece(item, 
-                        // success
-                        (result: any, skip: boolean) => {
-                            if (!skip) nodeData.push(result)
-                        },
+                    const success = (result: any, skip: boolean) => skip || nodeData.push(result);
+                    const fail = () => { matched = false; shouldBreak = true };
 
-                        // fail
-                        () => {
-                            matched    = false;
-                            shouldBreak = true;
-                        }, ruleVariation);
+                    this.evaluateOnePiece(item, success, fail);
 
                     if (shouldBreak) break; // break out of loop B
 
@@ -85,11 +76,7 @@ export default class Parser {
                 } else if (item instanceof GrammarBinaryLoop) {
 
                     // add a stack layer for the loop and set it to complete
-                    stack.unshift({
-                        content: item.content,
-                        type:    ContentStackType.BINARY,
-                        index:   0
-                    });
+                    stack.unshift(this.stackLayer(item.content, ContentStackType.BINARY));
                     nodeData = [adaptNodeData(nodeData, ruleVariation)];
 
                     continue;
@@ -98,11 +85,7 @@ export default class Parser {
                 } else if (item instanceof GrammarBlockLoop) {
 
                     // add a stack layer for the loop and set it to complete
-                    stack.unshift({
-                        content: item.content,
-                        type:    ContentStackType.BLOCK,
-                        index:   0
-                    });
+                    stack.unshift(this.stackLayer(item.content, ContentStackType.BLOCK));
 
                     continue;
 
@@ -154,7 +137,7 @@ export default class Parser {
 
         }
 
-        return "Error"; // TODO: replace with exception class
+        return error(this.index, this.currentTok);
     }
 
     private evaluateOnePiece = (item: GrammarRuleContentItem, success: Function, fail?: Function, rule?: GrammarRule) => {
@@ -164,8 +147,8 @@ export default class Parser {
 
             const itemResult = this.evaluateRule((item as GrammarAtom).name);
 
-            if (itemResult == "Error") fail ? fail() : null;
-            else if (itemResult)       success(itemResult, (item as GrammarAtom).skip);
+            if (itemResult instanceof ParseError) fail ? fail() : null;
+            else if (itemResult) success(itemResult, (item as GrammarAtom).skip);
 
         // for tokens: check if token matches the given item
         // if not — fail, else — return the token
@@ -173,10 +156,10 @@ export default class Parser {
 
             this.advance(rule);
 
-            if (!tokenMatches(this.tokens[this.index], item as GrammarAtom))
+            if (!tokenMatches(this.currentTok, item as GrammarAtom))
                 return fail ? fail() : null;
             
-            success(this.tokens[this.index], (item as GrammarAtom).skip);
+            success(this.currentTok, (item as GrammarAtom).skip);
             this.index++;
 
         }
@@ -184,7 +167,7 @@ export default class Parser {
 
     // skip all tokens based on ignore rules and overrides
     private advance (rule?: GrammarRule) {
-        while (tokenShouldBeIgnored(this.tokens[this.index], this.grammar, rule)) 
+        while (tokenShouldBeIgnored(this.currentTok, this.grammar, rule)) 
             this.index++;
     }
 
@@ -196,5 +179,11 @@ export default class Parser {
             prevToken = this.tokens[this.index-1];
         }
     }
+
+    private stackLayer (content: GrammarRuleContent, type: ContentStackType): RuleVariationContentStackItem { 
+        return { content: content, type: type, index: 0 };
+    }
+
+    private get currentTok () { return this.tokens[this.index] }
 
 }

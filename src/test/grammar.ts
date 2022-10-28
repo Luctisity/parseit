@@ -18,7 +18,6 @@ const blockSeparator = either("@BLOCKSEP&", "@NEWL&");
 
 
 grammar.rule("block").blockLoop("$statement", blockSeparator).overrideIgnore().as(BlockNode);
-//grammar.rule("block").blockLoop(blockSeparator, "$statement").overrideIgnore().as(BlockNode);
 grammar.rule("block").from("$statement").overrideIgnore().as(BlockNode);
 
 grammar.rule("statement").from("$if")  .preventRollback().pass();
@@ -33,7 +32,7 @@ grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "$statem
 grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "$statement")                             .as(IfNode);
 
 grammar.rule("else").from("@KEYWORD:else", "@OCURLY&", "$block", "@CCURLY&").as(ElseNode);
-grammar.rule("else").from("@KEYWORD:else", "$statement")                     .as(ElseNode);
+grammar.rule("else").from("@KEYWORD:else", "$statement")                    .as(ElseNode);
 
 
 grammar.rule("expr").from("$logic")    .pass();
