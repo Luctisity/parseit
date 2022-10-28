@@ -10,7 +10,7 @@ npm install parseit
 ```
 
 Congratulations, you're good to go! 
-<br/><br/>
+<br/>
 
 ### Creating grammar
 Let's start by creating a new file named `grammar.js`, where we will define the grammar rules for our language:
@@ -88,7 +88,7 @@ export default grammar;
 ```
 
 This set of rules makes it possible to use `-` or `+` unary operators before the numbers (notice how the `factor` rule is *right-recursive*), and to use parenthesis (`OPAREN` and `CPAREN` tokens) to change the order of operations. Notice the new `select(number)` method. It only passes the `expr` rule to the AST, ignoring parenthesis tokens.
-<br/><br/>
+<br/>
 
 ### Creating AST Nodes
 Now, before testing our grammar rules, we need something to build our *AST* (Abstract Syntax Tree) with. In ParseIT, we use a special `ASTNode` class for that. Let's create a new file titled `ast.js`. We would need 4 types of nodes in our language:
@@ -183,7 +183,7 @@ export default grammar;
 ```
 
 Our language is almost complete, but we are going to add one more thing.
-<br/><br/>
+<br/>
 
 ### Blocks
 
@@ -231,7 +231,7 @@ grammar.startFrom("block");
 
 export default grammar;
 ```
-<br/><br/>
+<br/>
 
 ### Parsing
 
