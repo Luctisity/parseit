@@ -1,14 +1,30 @@
 {
   "name": "parseit",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Customizable parsing library for converting a list of tokens into an AST tree",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "prepare" : "npm run build"
   },
   "author": "Luctisity",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^4.8.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luctisity/parseit.git"
+  },
+  "keywords": [
+    "parser",
+    "ast",
+    "recursive-descent",
+    "parser-generator",
+    "grammar"
+  ],
+  "bugs": {
+    "url": "https://github.com/Luctisity/parseit/issues"
+  },
+  "homepage": "https://github.com/Luctisity/parseit#readme"
 }
