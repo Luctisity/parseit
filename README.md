@@ -1,12 +1,12 @@
-<div align="center"><img src="https://media.discordapp.net/attachments/510776441084968977/1035527394632671242/parseit-logo.png" height=200 /></div>
+<div align="center"><img src="https://cdn.discordapp.com/attachments/510776441084968977/1035624387107356703/parseit-logo.png" height=200 /></div>
 
 # Parsing Toolkit for Programming Languages
-**ParseIT** is a JavaScript library for generating recursive-descent parsers that work with tokens. It provides a declarative way to define grammar rules for your language, as well as AST nodes to build the resulting tree with. It is availible on npm and works on variety of JavaScript and TypeScript runtimes, including web browsers.
+**ParseIT.js** is a JavaScript library for generating recursive-descent parsers that work with tokens. It provides a declarative way to define grammar rules for your language, as well as AST nodes to build the resulting tree with. It is availible on npm and works on variety of JavaScript and TypeScript runtimes, including web browsers.
 
 ## Getting Started
 First, add ParseIT to your project using npm
 ```
-npm install parseit
+npm install parseit.js
 ```
 
 Congratulations, you're good to go! 
@@ -16,7 +16,7 @@ Congratulations, you're good to go!
 Let's start by creating a new file named `grammar.js`, where we will define the grammar rules for our language:
 
 ```js
-import { Grammar, either } from 'parseit';
+import { Grammar, either } from 'parseit.js';
 const grammar = new Grammar();
 
 export default grammar;
@@ -68,7 +68,7 @@ grammar.rule("term").from("$number").pass();
 The `either` function allows for multiple choices in a single rule, without breaking the loop. Finally, we are finished with `term`! Let's add other rules to complete our grammar:
 
 ```js
-import { Grammar, either } from 'parseit';
+import { Grammar, either } from 'parseit.js';
 const grammar = new Grammar();
 
 grammar.rule("expr").from("$term").binaryLoop([either("@ADD", "@SUB"), "$term"]).pass();
@@ -99,7 +99,7 @@ Now, before testing our grammar rules, we need something to build our *AST* (Abs
 
 Let's define them like so:
 ```js
-import { ASTNode, Token} from 'parseit';
+import { ASTNode, Token} from 'parseit.js';
 
 export class AtomNode extends ASTNode {
     type = "atom";
@@ -156,7 +156,7 @@ This would make our AST a bit cleaner.
 
 Now we can incorporate the nodes into the grammar:
 ```js
-import { Grammar, either } from 'parseit';
+import { Grammar, either } from 'parseit.js';
 import { AtomNode, UnaryOpNode, BinaryOpNode, BlockNode } from './ast.js';
 const grammar = new Grammar();
 
@@ -201,7 +201,7 @@ grammar.startFrom("block");
 ```
 And just like that, we are done with our grammar, hooray!
 ```js
-import { Grammar, either } from 'parseit';
+import { Grammar, either } from 'parseit.js';
 import { AtomNode, UnaryOpNode, BinaryOpNode, BlockNode } from './ast.js';
 const grammar = new Grammar();
 
@@ -238,7 +238,7 @@ export default grammar;
 Let's create a `main.js` file where we'll be testing our language:
 
 ```js
-import { Token, Parser} from "parseit";
+import { Token, Parser} from "parseit.js";
 import grammar from "./grammar.js";
 
 const parser = new Parser(grammar);
