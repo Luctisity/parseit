@@ -19,10 +19,12 @@ export default class Parser {
     index:   number = 0;
     grammar: Grammar;
     
+    /** The main parser object. Takes the grammar object as a constructor argument */
     constructor (grammar: Grammar) {
         this.grammar = grammar;
     }
 
+    /** Takes an array of tokens and constructs an AST tree based on the grammar rules */
     parse (tokens: Token[]) {
         this.tokens = tokens;
         this.index  = 0;

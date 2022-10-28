@@ -8,14 +8,17 @@ export type GrammarRulesMap = {
 
 export type GrammarRuleShorthand = string | GrammarEither;
 
+/** Grammar object class. Used to define rules and other parsing details */
 export default class Grammar {
 
     private rules: GrammarRulesMap = {};
     private currentData: any       = {};
     private ignored: GrammarAtom[] = [];
 
+    /** The name of the rule from which the parser will begin matching */
     startRule: string = "";
 
+    /** Define a rule variation */
     rule = (name: string) => {
         this.currentData = {
             name: name,
@@ -25,10 +28,12 @@ export default class Grammar {
         return this.chain();
     }
 
+    /** Define a starting rule, from which the parser will begin matching */
     startFrom (rule: string) {
         this.startRule = rule;
     }
 
+    /** Ignore specific tokens globally. This can be overrided with a "overrideIgnore" rule method */
     ignore (...args: GrammarRuleShorthand[]) {
         args.forEach(a => {
             let p = convertStringToAtom(a) as GrammarAtom;
@@ -36,15 +41,18 @@ export default class Grammar {
         });
     }
 
+    /** Check if a token is globally ignored */
     getIgnored (token: Token, rule?: GrammarRule) {
         const ignored = (rule && rule.ignored) ? rule.ignored : this.ignored;
         return ignored.filter(f => f.name == token.type && (f.value === undefined || f.value == token.value))[0];
     }
 
+    /** Get a rule by name. Will return a rule object with all of it's variations */
     getRule (name: string) {
         return this.rules[name];
     }
 
+    /** Add tokens and other rules to the rule normally */
     private from = (...args: GrammarRuleShorthand[]) => {
 
         args.forEach(a => {
@@ -56,6 +64,7 @@ export default class Grammar {
 
     }
 
+    /** Add tokens and other rules within a binary loop */
     private binaryLoop = (args: GrammarRuleShorthand[]) => {
 
         const loop = new GrammarBinaryLoop();
@@ -69,6 +78,7 @@ export default class Grammar {
 
     }
 
+    /** Add a statement and a separator within a block loop */
     private blockLoop = (statement: GrammarRuleShorthand, separator: GrammarRuleShorthand) => {
 
         const loop = new GrammarBlockLoop();
@@ -82,6 +92,7 @@ export default class Grammar {
 
     }
 
+    /** Override global ignore settings for this rule variation. This will completely replace the global ignore settings */
     private overrideIgnore = (...args: GrammarRuleShorthand[]) => {
 
         this.currentData.ignored = [];
@@ -94,31 +105,33 @@ export default class Grammar {
 
     }
 
+    /** By default, when going to the next rule, the parser rewinds itself to the tokens that were previosly skip. 
+     This can sometimes cause infinite loops. Use this method to prevent this behaviour for the rule variation */
     private preventRollback = () => {
         this.currentData.preventRollback = true;
         return this.chain();
     }
 
-    // for converting data automatically to a specific AST node
+    /** Convert data automatically to a specific AST node. The arguments for the node's constructor must be in the correct order */
     private as = (match: ASTNodeConstructor) => {
         this.currentData.match = match;
         this.make();
     }
 
-    // for keeping the existing data as is
+    /** Keep the existing data as is. This will pass the first data item to the next rule */ 
     private pass = () => {
         this.currentData.match = GrammarRuleSpecialMatch.PASS;
         this.make();
     }
 
-    // for using a function to convert the data in some way
+    /** Use a function to convert the data in some way. This function takes an array of data items as the argument */ 
     private decide = (func: Function) => {
         this.currentData.match = GrammarRuleSpecialMatch.FUNC;
         this.currentData.func  = func;
         this.make();
     }
 
-    // to select a certain item from the data list
+    /** Selects a certain item from the data list. Similar to pass, except instead of the first, you can pick any index */
     private select = (index: number) => {
         this.currentData.match = GrammarRuleSpecialMatch.FUNC;
         this.currentData.func  = (data: any[]) => data[index];
@@ -151,6 +164,7 @@ export default class Grammar {
 
 }
 
+/** This selector allows multiple variants inside a single rule. Useful with loops */
 export function either (...args: string[]) {
     const variants: any[] = args.map(a => convertStringToAtom(a));
 

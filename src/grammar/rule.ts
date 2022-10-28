@@ -11,6 +11,7 @@ export enum GrammarAtomType         { RULE, TOKEN }
 export enum GrammarRuleSpecialMatch { PASS, FUNC }
 
 
+/** The grammar rule variation */
 export default class GrammarRule {
 
     name:     string;
@@ -38,7 +39,7 @@ export default class GrammarRule {
 
 }
 
-
+/** A single grammar rule variation object. Can be a token or a reference to another rule */
 export class GrammarAtom {
 
     name:  string;
@@ -55,18 +56,21 @@ export class GrammarAtom {
 
 }
 
+/** Binary loop grammar item */
 export class GrammarBinaryLoop {
 
     content: GrammarRuleContent = [];
 
 }
 
+/** Block loop grammar item */
 export class GrammarBlockLoop {
 
     content: GrammarRuleContent = [];
 
 }
 
+/** Either selector grammar item */
 export class GrammarEither {
 
     variants: GrammarRuleContent = [];
