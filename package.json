@@ -1,6 +1,6 @@
 {
   "name": "parseit.js",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Customizable parsing library for converting a list of tokens into an AST tree",
   "main": "build/main.js",
   "types": "build/main.d.ts",
