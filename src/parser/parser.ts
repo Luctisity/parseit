@@ -32,6 +32,7 @@ export default class Parser {
         const startRule = this.grammar.startRule;
         const result    = this.evaluateRule(startRule);
 
+        if (result instanceof ParseError)    return error(result.position.index, result.position.token!);
         if (this.index < this.tokens.length) return error(this.index, this.currentTok); // if didn't reach the end, throw error
         return result;
     }
@@ -41,6 +42,7 @@ export default class Parser {
        
         let startIndex = +this.index; // copy index
         let ruleVariationIndex = 0;
+        let errorIndex = -1;
 
         // loop A: through all rule's variations
         if (ruleVariations)
@@ -68,7 +70,10 @@ export default class Parser {
                     let shouldBreak = false;
 
                     const success = (result: any, skip: boolean) => skip || nodeData.push(result);
-                    const fail = () => { matched = false; shouldBreak = true };
+                    const fail = (index?: number) => { 
+                        matched = false; shouldBreak = true;
+                        errorIndex = index || errorIndex;
+                    };
 
                     this.evaluateOnePiece(item, success, fail);
 
@@ -98,10 +103,13 @@ export default class Parser {
                     let skip = false;
                     
                     item.variants.forEach(variant => {
+                        if (found) return;
                         this.evaluateOnePiece(variant, (result: any) => {
                             found = result;
                             skip  = (variant as GrammarAtom).skip;
-                        }, undefined, ruleVariation);
+                        }, (index?: number) => { 
+                            errorIndex = index || errorIndex 
+                        }, ruleVariation);
                     });
                     
                     if (found) {
@@ -139,7 +147,8 @@ export default class Parser {
 
         }
 
-        return error(this.index, this.currentTok);
+        errorIndex = errorIndex == -1 ? this.index : errorIndex; // if errorIndex is still -1, change it to current index
+        return error(errorIndex, this.tokens[errorIndex]);
     }
 
     private evaluateOnePiece = (item: GrammarRuleContentItem, success: Function, fail?: Function, rule?: GrammarRule) => {
@@ -149,7 +158,7 @@ export default class Parser {
 
             const itemResult = this.evaluateRule((item as GrammarAtom).name);
 
-            if (itemResult instanceof ParseError) fail ? fail() : null;
+            if (itemResult instanceof ParseError) fail ? fail(itemResult.position.index) : null;
             else if (itemResult) success(itemResult, (item as GrammarAtom).skip);
 
         // for tokens: check if token matches the given item
@@ -159,7 +168,7 @@ export default class Parser {
             this.advance(rule);
 
             if (!tokenMatches(this.currentTok, item as GrammarAtom))
-                return fail ? fail() : null;
+                return fail ? fail(this.index) : null;
             
             success(this.currentTok, (item as GrammarAtom).skip);
             this.index++;

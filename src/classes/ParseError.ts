@@ -23,6 +23,8 @@ export default class ParseError {
         this.type = type || this.type;
     }
 
+    toString = () => `ParseError: Unexpected token ${this.position.token} at index ${this.position.index}`;
+
 }
 
 export function error (index: number, token: Token) {

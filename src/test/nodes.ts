@@ -3,7 +3,6 @@ import Token from "../classes/Token";
 
 
 export class AtomNode extends ASTNode {
-
     token: Token;
 
     constructor (token: Token) {
@@ -11,14 +10,10 @@ export class AtomNode extends ASTNode {
         this.token = token;
     }
 
-    toString () {
-        return this.token.toString();
-    }
-
+    toString = () => this.token.toString();
 }
 
 export class UnaryOpNode extends ASTNode {
-
     operator: Token;
     node:     ASTNode;
 
@@ -28,14 +23,10 @@ export class UnaryOpNode extends ASTNode {
         this.node     = node;
     }
 
-    toString () {
-        return `( ${this.operator} ${this.node} )`;
-    }
-
+    toString = () => `( ${this.operator} ${this.node} )`;
 }
 
 export class BinaryOpNode extends ASTNode {
-
     left:     ASTNode;
     operator: Token;
     right:    ASTNode;
@@ -47,16 +38,10 @@ export class BinaryOpNode extends ASTNode {
         this.right    = right;
     }
 
-    toString () {
-        return `( ${this.left} ${this.operator} ${this.right} )`;
-    }
-
+    toString = () => `( ${this.left} ${this.operator} ${this.right} )`;
 }
 
 export class BlockNode extends ASTNode {
-
-    type = 'block';
-
     nodes: ASTNode[];
 
     constructor (...nodes: ASTNode[]) {
@@ -64,16 +49,10 @@ export class BlockNode extends ASTNode {
         this.nodes = nodes;
     }
 
-    toString () {
-        return `{\n\n${this.nodes.join('; \n')}\n\n}`;
-    }
-
+    toString = () => `{\n\n${this.nodes.join('; \n')}\n\n}`;
 }
 
 export class MemberAccessNode extends ASTNode {
-
-    type = 'memberAccess';
-
     expr:      ASTNode;
     member:    ASTNode | Token;
 
@@ -83,14 +62,10 @@ export class MemberAccessNode extends ASTNode {
         this.member = member;
     }
 
-    toString () {
-        return `( ${this.expr} [ ${this.member} ] )`;
-    }
-
+    toString = () => `( ${this.expr} [ ${this.member} ] )`;
 }
 
 export class VarAssignNode extends ASTNode {
-
     name:     Token;
     operator: Token;
     expr?:    ASTNode;
@@ -102,16 +77,10 @@ export class VarAssignNode extends ASTNode {
         this.expr     = expr;
     }
 
-    toString () {
-        return `[${this.name} ${this.operator} ${this.expr}]`;
-    }
-
+    toString = () => `[${this.name} ${this.operator} ${this.expr}]`;
 }
 
 export class IfNode extends ASTNode {
-
-    type = 'if';
-
     condIf:    ASTNode;
     thenIf:    ASTNode;
     thenElse?: ASTNode;
@@ -123,16 +92,10 @@ export class IfNode extends ASTNode {
         this.thenElse = thenElse;
     }
 
-    toString () {
-        return `if ${this.condIf} then ${this.thenIf} ${this.thenElse || ""}`;
-    }
-
+    toString = () => `if ${this.condIf} then ${this.thenIf} ${this.thenElse || ""}`;
 }
 
 export class ElseNode extends ASTNode {
-
-    type = 'else';
-
     block: ASTNode;
 
     constructor (_keyword: Token, block: ASTNode) {
@@ -140,8 +103,60 @@ export class ElseNode extends ASTNode {
         this.block = block;
     }
 
-    toString () {
-        return `else ${this.block}`;
+    toString = () => `else ${this.block}`;
+}
+
+export class SwitchNode extends ASTNode {
+    cond:     ASTNode;
+    cases:    ASTNode;
+    defcase?: ASTNode;
+
+    constructor (_keyword: Token, cond: ASTNode, cases?: ASTNode, defcase?: ASTNode) {
+        super();
+        this.cond    = cond;
+        this.cases   = cases || new SwitchCasesNode();
+        this.defcase = defcase;
+
+        if (this.cases instanceof DefaultCaseNode) {
+            this.defcase = this.cases;
+            this.cases = new SwitchCasesNode();
+        }
     }
 
+    toString = () => `switch ${this.cond} {\n${this.cases}${this.defcase || ''}\n}`;
+}
+
+export class SwitchCasesNode extends ASTNode {
+    cases: SwitchCaseNode[];
+
+    constructor (...cases: SwitchCaseNode[]) {
+        super();
+        this.cases = cases;
+    }
+
+    toString = () => `${this.cases.join("\n")}`;
+}
+
+export class DefaultCaseNode extends ASTNode {
+    block: ASTNode;
+
+    constructor (_keyword: Token, block: ASTNode) {
+        super();
+        this.block = block;
+    }
+
+    toString = () => `\ndefault: ${this.block}`;
+}
+
+export class SwitchCaseNode extends ASTNode {
+    test:  ASTNode;
+    block: ASTNode;
+
+    constructor (_keyword: Token, test: ASTNode, block: ASTNode) {
+        super();
+        this.test    = test;
+        this.block   = block;
+    }
+
+    toString = () => `case ${this.test} ${this.block}`;
 }

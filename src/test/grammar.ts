@@ -1,5 +1,10 @@
 import Grammar, { either } from "../grammar/grammar";
-import { AtomNode, UnaryOpNode, BinaryOpNode, VarAssignNode, MemberAccessNode, BlockNode, IfNode, ElseNode } from "./nodes";
+import { 
+    AtomNode, UnaryOpNode, BinaryOpNode, 
+    VarAssignNode, MemberAccessNode, BlockNode, 
+    IfNode, ElseNode, SwitchNode, SwitchCasesNode,
+    DefaultCaseNode, SwitchCaseNode
+} from "./nodes";
 const grammar = new Grammar();
 
 function binaryOpOrPass (data: any[]) {
@@ -20,9 +25,10 @@ const blockSeparator = either("@BLOCKSEP&", "@NEWL&");
 grammar.rule("block").blockLoop("$statement", blockSeparator).overrideIgnore().as(BlockNode);
 grammar.rule("block").from("$statement").overrideIgnore().as(BlockNode);
 
-grammar.rule("statement").from("$if")  .preventRollback().pass();
-grammar.rule("statement").from("$expr").preventRollback().pass();
-grammar.rule("statement").from()       .preventRollback().pass();
+grammar.rule("statement").from("$if")    .preventRollback().pass();
+grammar.rule("statement").from("$switch").preventRollback().pass();
+grammar.rule("statement").from("$expr")  .preventRollback().pass();
+grammar.rule("statement").from()         .preventRollback().pass();
 
 
 grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "@OCURLY&", "$block", "@CCURLY&", "$else").as(IfNode);
@@ -33,6 +39,17 @@ grammar.rule("if").from("@KEYWORD:if", "@OPAREN&", "$expr", "@CPAREN&", "$statem
 
 grammar.rule("else").from("@KEYWORD:else", "@OCURLY&", "$block", "@CCURLY&").as(ElseNode);
 grammar.rule("else").from("@KEYWORD:else", "$statement")                    .as(ElseNode);
+
+grammar.rule("switch").from("@KEYWORD:switch", "@OPAREN&", "$expr", "@CPAREN&", "@OCURLY&", "$switchCases", "$switchDefaultCase", "@CCURLY&").as(SwitchNode);
+grammar.rule("switch").from("@KEYWORD:switch", "@OPAREN&", "$expr", "@CPAREN&", "@OCURLY&", "$switchCases", "@CCURLY&").as(SwitchNode);
+grammar.rule("switch").from("@KEYWORD:switch", "@OPAREN&", "$expr", "@CPAREN&", "@OCURLY&", "$switchDefaultCase", "@CCURLY&").as(SwitchNode);
+
+grammar.rule("switchCases").blockLoop("$switchCase").as(SwitchCasesNode);
+grammar.rule("switchCases").from().as(SwitchCasesNode);
+
+grammar.rule("switchCase").from("@KEYWORD:case", "$expr", "@COLON&", "$block") .as(SwitchCaseNode);
+grammar.rule("switchCase").from("@KEYWORD:case", "$expr", "@COLON&")           .as(SwitchCaseNode);
+grammar.rule("switchDefaultCase").from("@KEYWORD:default", "@COLON&", "$block").as(DefaultCaseNode);
 
 
 grammar.rule("expr").from("$logic")    .pass();
@@ -90,6 +107,7 @@ grammar.rule("memberFunction").from("@OPAREN", "@CPAREN")         .select(2);
 
 grammar.rule("atom").from("@INT")          .as(AtomNode);
 grammar.rule("atom").from("@FLOAT")        .as(AtomNode);
+grammar.rule("atom").from("@STRING")       .as(AtomNode);
 grammar.rule("atom").from("@KEYWORD:true") .as(AtomNode);
 grammar.rule("atom").from("@KEYWORD:false").as(AtomNode);
 grammar.rule("atom").from("@KEYWORD:null") .as(AtomNode);
